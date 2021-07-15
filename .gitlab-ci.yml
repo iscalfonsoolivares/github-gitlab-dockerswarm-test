@@ -1,70 +1,23 @@
-image: docker:latest
-services:
-  - docker:dind
+image: tiangolo/docker-with-compose
+
+before_script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
 
 stages:
-  - test
+  - build
   - deploy
 
-step-develop:
-  stage: test
-  before_script:
-    - export DYNAMIC_ENV_VAR=DEVELOP
-  only:
-    - develop
-  tags:
-    - develop
+build-prod:
+  stage: build
   script:
-    - echo running tests in $DYNAMIC_ENV_VAR
+    - docker-compose build
+  only:
+    - main
 
-step-uat:
+deploy-prod:
   stage: deploy
-  before_script:
-    - export DYNAMIC_ENV_VAR=UAT
-  only:
-    - uat
-  tags:
-    - uat
   script:
-    - echo setting up env $DYNAMIC_ENV_VAR
-    - sudo apt-get install -y python-pip
-    - sudo pip install docker-compose
-    - sudo docker image prune -f
-    - sudo docker-compose -f docker-compose.yml build --no-cache
-    - sudo docker-compose -f docker-compose.yml up -d
-
-step-deploy-staging:
-  stage: deploy
-  before_script:
-    - export DYNAMIC_ENV_VAR=STAGING
+    - docker stack deploy -c docker-compose.yml --with-registry-auth my-stack
   only:
-    - staging
-  tags:
-    - staging
-  script:
-    - echo setting up env $DYNAMIC_ENV_VAR
-    - sudo apt-get install -y python-pip
-    - sudo pip install docker-compose
-    - sudo docker image prune -f
-    - sudo docker-compose -f docker-compose.yml build --no-cache
-    - sudo docker-compose -f docker-compose.yml up -d
-
-step-deploy-production:
-  stage: deploy
-  before_script:
-    - export DYNAMIC_ENV_VAR=PRODUCTION
-  only:
-    - production
-  tags:
-    - production
-  script:
-    - echo setting up env $DYNAMIC_ENV_VAR
-    - sudo apt-get install -y python-pip
-    - sudo pip install docker-compose
-    - sudo docker image prune -f
-    - sudo docker-compose -f docker-compose.yml build --no-cache
-    - sudo docker-compose -f docker-compose.yml up -d
-  when: manual
-
-
+    - main
 

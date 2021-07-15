@@ -13,6 +13,9 @@ build-prod:
     - docker-compose build
   only:
     - main
+tags:
+    - uat
+
 
 deploy-prod:
   stage: deploy
@@ -20,4 +23,5 @@ deploy-prod:
     - docker stack deploy -c docker-compose.yml --with-registry-auth my-stack
   only:
     - main
-
+tags:
+    - uat
